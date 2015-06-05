@@ -1,12 +1,17 @@
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -157,6 +162,7 @@ public class function {
 		System.out.println(lnk);
 		String[] everything=null;
 		BufferedReader br = new BufferedReader(new FileReader(lnk));
+		
 		try {
 			
 			StringBuilder sb = new StringBuilder();
@@ -360,11 +366,9 @@ public class function {
 	
 	///////////////////////////////////////////////////////////////////////////////////
 	
-	public static void main(String args[]) throws IOException {
-		 //System.out.println(retTimeStamp("2013-11-25T08:36:52.598Z"));
-		 //System.out.println(retTimeStamp("2014-01-27T04:44:04.001Z"));
-		 System.out.println(getTimeCreateFile("E:\\_reg\\FILE0204.mov").split("T")[0]);
-	 }//public static void main(String args[]) throws IOException
+	public static void main(String args[]) throws IOException, NoSuchAlgorithmException {
+		
+	}//public static void main(String args[]) throws IOException
 	
 	 ///////////////////////////////////////////////////////////////////////////////////
 	 
@@ -390,6 +394,36 @@ public class function {
 		executeQ(sql);
 		
 	} //static public void addCommentInBD(String comment,boolean start, boolean end) {
+	
+	////////////////////////////////////////////////////////////////////////////////////////
+	//	описание:
+	//		вернет контрольную сумму файла f
+	static public String crc(String f) throws IOException, NoSuchAlgorithmException {
+		
+		InputStream fi = new BufferedInputStream(new FileInputStream(f));
+				
+		MessageDigest md = MessageDigest.getInstance("SHA1");
+	    byte[] dataBytes = new byte[1024];
+	    int nread = 0; 
+			 
+	    while ((nread = fi.read(dataBytes)) != -1) {
+			    	
+	    	md.update(dataBytes, 0, nread);
+			      
+	    };
+			 
+		byte[] mdbytes = md.digest();
+		StringBuffer sb = new StringBuffer("");
+			    
+		for (int i = 0; i < mdbytes.length; i++) {
+			    	
+			sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100, 16).substring(1));
+			    	
+		}
+			 
+		return sb.toString();
+		
+	}	//static public String crc(String f) throws IOException, NoSuchAlgorithmException
 	
 }//public class function
 

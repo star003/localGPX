@@ -44,7 +44,7 @@ public class localGPX extends javax.swing.JFrame {
 		
 		setTitle("Выгрузка в GPX");
 		
-		setBounds(100, 100, 590, 193); 	
+		setBounds(100, 100, 590, 237); 	
 		setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 		getContentPane().setLayout(null);
 		
@@ -64,7 +64,7 @@ public class localGPX extends javax.swing.JFrame {
 				
 			}
 		});
-		btnStart.setBounds(129, 111, 97, 25);
+		btnStart.setBounds(42, 154, 97, 25);
 		getContentPane().add(btnStart);
 		
 		JButton btnStop = new JButton("stop");
@@ -76,7 +76,7 @@ public class localGPX extends javax.swing.JFrame {
 				}	
 			}
 		});
-		btnStop.setBounds(262, 111, 97, 25);
+		btnStop.setBounds(151, 154, 97, 25);
 		getContentPane().add(btnStop);
 		
 		JButton btnExit = new JButton("exit");
@@ -89,11 +89,11 @@ public class localGPX extends javax.swing.JFrame {
 				System.exit(0);
 			}
 		});
-		btnExit.setBounds(389, 111, 142, 25);
+		btnExit.setBounds(389, 154, 142, 25);
 		getContentPane().add(btnExit);
 		
 		tablo = new JLabel("Жду...");
-		tablo.setBounds(63, 85, 468, 16);
+		tablo.setBounds(63, 128, 468, 16);
 		getContentPane().add(tablo);
 		
 		opProgressBar = new JProgressBar();
@@ -109,6 +109,27 @@ public class localGPX extends javax.swing.JFrame {
 		lblCurPr = new JLabel("CUR PR");
 		lblCurPr.setBounds(42, 51, 56, 16);
 		getContentPane().add(lblCurPr);
+		
+		JButton btnNewButton = new JButton("анализ");
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				try {
+					
+					analizGPX.main(null);
+					
+				} catch (Exception e) {
+					
+					e.printStackTrace();
+					
+				}
+				
+			}
+			
+		});
+		
+		btnNewButton.setBounds(260, 154, 97, 25);
+		getContentPane().add(btnNewButton);
 		
 		addWindowListener(new java.awt.event.WindowAdapter() {
 			
@@ -205,7 +226,6 @@ class newDb {
 		st.execute("delete from logger;");
 		st.execute("delete from points;");
 		st.execute("delete from process;");
-		
 		st.close();
 		
 	}//static public void clearTables() throws SQLException, ClassNotFoundException 
@@ -402,6 +422,14 @@ class newDb {
 		//**@id номер трака в базе
 		//**@dr адрес куда пишем
 		String adrFile = dr+"\\"+id+".gpx";
+		/*
+		File theDir = new File(adrFile);
+		
+		if (theDir.exists()) {
+			//**файл есть , не пишем.
+			return;
+		}
+		*/
 		Writer writer = null;
 		
 		try {
