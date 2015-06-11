@@ -20,6 +20,8 @@ public class parserGPXsax {
 	//***************************
 	static List<recGeo1> v = new ArrayList<recGeo1>();
 	
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	static Double calculateDistance(Double latA, Double longA, Double latB, Double longB) {
 		 //******************************************************
 		 //** http://www.kobzarev.com/programming/calculation-of-distances-between-
@@ -50,6 +52,8 @@ public class parserGPXsax {
 		    return dist;
 		} //static Double calculateDistance(Double latA, Double longA, Double latB, Double longB)
 	
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	static long grtMS(String s) throws Exception{
 		//********************************************
 		//**вернет количество милесекунд от 1970 года
@@ -61,6 +65,8 @@ public class parserGPXsax {
 		
 	}//static long grtMS(String s) throws Exception{
 	
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	static String unixToDate(long unixSeconds){
 		
 		Date date = new Date(unixSeconds); 
@@ -71,6 +77,8 @@ public class parserGPXsax {
 		
 	}//static String unixToDate(long unixSeconds)
 
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	static String[] getDt(String s) throws Exception{
 		//**************************************************
 		//**вернем мультистроку с датой и временем из строки
@@ -92,6 +100,8 @@ public class parserGPXsax {
 		
 	}//static String[] getDt(String s)
 	
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	static Double midleSpeed(List<recGeo1> x) {
 	//*************************************
 	//*вычисляет среднюю скорость
@@ -100,6 +110,8 @@ public class parserGPXsax {
 		return (x.get(x.size()-1).total/((x.get(x.size()-1).absTime-x.get(1).absTime)*0.001))*3.6;
 		
 	}//static Double midleSpeed(List<recGeo1> x)
+	
+	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	static List<recGeo1> getData(String fileName) throws Exception{
 		//************************************************
@@ -119,70 +131,65 @@ public class parserGPXsax {
         	//System.out.println("позиций "+nodeList.getLength());
         	
         	for (int z=0;z<nodeList.getLength();z++) {
-        		/*
-        		if (z % 10000 ==0 ) {
-        			//***каждые 10 000 точек сообщим что мы еще живы
-					System.out.println("позиция "+z);
-				}
-				*/
         		
         		Double lat  = 0.0;
         		Double lon  = 0.0;
 				String date = null;
+				
         		Node node = nodeList.item(z);
         		NodeList x1 = node.getChildNodes();
         		
-        			for(int i1=0;i1<x1.getLength();i1++) {
+        		for(int i1=0;i1<x1.getLength();i1++) {
         				
-        				if (x1.item(i1).getNodeName().equals("time")) {
+        			if (x1.item(i1).getNodeName().equals("time")) {
         					
-        					//System.out.println(x1.item(i1).getNodeName()+" = "+x1.item(i1).getTextContent());
-        					date = x1.item(i1).getTextContent();
-        					
-        				}
+        				//System.out.println(x1.item(i1).getNodeName()+" = "+x1.item(i1).getTextContent());
+        				date = x1.item(i1).getTextContent();
         				
-        			}//for i1
+        			}
+        				
+        		}//for i1
         			
-        				//*****переберем атрибуты тэга*****
-        				NamedNodeMap x = node.getAttributes();
+        		//*****переберем атрибуты тэга*****
+        		NamedNodeMap x = node.getAttributes();
         				
-        				for(int i=0;i<x.getLength();i++) {
+        		for(int i=0;i<x.getLength();i++) {
         					
-        					if(x.item(i).getNodeName().equals("lat")) {
+        			if(x.item(i).getNodeName().equals("lat")) {
         						
-        						//System.out.println(x.item(i).getNodeName()+" = "+Double.valueOf(x.item(i).getNodeValue()));
-        						
-        						lat = Double.valueOf(x.item(i).getNodeValue());
-        					}
-        					
-        					if(x.item(i).getNodeName().equals("lon")) {
-        						
-            					//System.out.println(x.item(i).getNodeName()+" = "+Double.valueOf(x.item(i).getNodeValue()));
-            					
-        						lon = Double.valueOf(x.item(i).getNodeValue());
-            				}
-        					
-        				}//for i
+        				lat = Double.valueOf(x.item(i).getNodeValue());
         				
-        				recGeo1 v1 = new recGeo1();
-        				v1.lat = lat;
-        				v1.lon = lon;
-        				v1.date= date;
-        				v1.time= date;
-        				v1.distance =0.0;
-    					v1.total    =0.0;
-    					v1.absTime  =0;
-    					v.add(v1);
+        			}
+        					
+        			if(x.item(i).getNodeName().equals("lon")) {
+        						
+        				lon = Double.valueOf(x.item(i).getNodeValue());
+        				
+            		}
+        					
+        		}//for i
+        				
+        		recGeo1 v1 = new recGeo1();
+        		v1.lat = lat;
+        		v1.lon = lon;
+        		v1.date= date;
+        		v1.time= date;
+        		v1.distance =0.0;
+    			v1.total    =0.0;
+    			v1.absTime  =0;
+    			v.add(v1);
     					
         	}//for z
-        	//System.out.println("конец формирования данных ");
+        	
         }//try
+		
         catch (Exception e) {
+        	
         }//catch
-		//System.out.println(v.size());
+		
 		//*****может это тупо но расчитаем растояние потом и преобразуем время с датой****
+		
 		Double totalDistance= 0.0;
-		//Double spd 			= 0.0;
 		
 		for (int i=1;i<v.size();i++){
 			
@@ -198,19 +205,17 @@ public class parserGPXsax {
 				v1.distance = ds;
 				v1.total    = totalDistance;
 				long absTm 	= grtMS(v1.date+" "+v1.time);
-				//Double spd 	= (ds/((absTm-v.get(i-2).absTime)*0.001))*3.6;
 				v1.speed 	= 0.0;//spd;
 				v1.absTime  = absTm;
+				//****направление
+				v1.Direction = i > 1  ? calcDirection(v.get(i-1).lat,v.get(i-1).lon,v.get(i).lat,v.get(i).lon) : 0.0;
 				v.set(i,v1);
 				
 			}//try
 			
 			catch (Exception e) {
-				//System.out.println("eeee");
 				
-				//Double spd 	= 0.0;	
-				
-	        }//catch
+			}//catch
 			
 		}
 		
@@ -218,14 +223,89 @@ public class parserGPXsax {
 		
 	} //static List<recGeo1> getData(String fileName) throws Exception
 	
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/*
+	 * вычисление направления...
+	 * http://brullworfel.ru/blog/calcdirection-delphi/
+	 * 
+	function CalcDirection(Lat1,Long1,Lat2,Long2: Single) : Single;
+	var
+	x1,y1,y2 : Single;
+	begin
+	x1 := sin((-Long2+Long1)*Pi/180);
+	y1 := cos(Lat2*Pi/180) * tan(Lat1*Pi/180);
+	y2 := sin(Lat2*pi/180) * cos((-Long2+Long1)*pi/180);
+	Result := ArcTan(x1/(y1-y2))*180/pi;
+	
+	if Result < 0 then
+		Result := 360 + Result;
+	
+	if (Long2 < Long1) and (Long2 > (Long1-180)) then
+		if Result > 180 then
+			Result := Result - 180;
+	if Result > 360 then 
+		Result :=Result - 360;
+	end;
+	*/
+	
+	static Double calcDirection(Double Lat1,Double Long1,Double Lat2, Double Long2) {
+		
+		Double x1 = Math.sin((-Long2+Long1)*Math.PI/180);
+		Double y1 = Math.cos(Lat2*Math.PI/180) * Math.tan(Lat1*Math.PI/180);
+		Double y2 = Math.sin(Lat2*Math.PI/180) * Math.cos((-Long2+Long1)*Math.PI/180);
+		Double Result = Math.atan(x1/(y1-y2))*180/Math.PI;
+		
+		if (Result < 0) {
+			
+			Result = 360 + Result;
+			
+		}
+		
+		if (Long2 < Long1 & Long2 > (Long1-180))  {
+		
+			if (Result > 180) {
+				
+				Result = Result - 180;
+				
+			}
+			
+		}
+		
+		return Double.isNaN(Result)  ? 0.0 : Result;
+		
+	}//static Double CalcDirection(Double Lat1,Double Long1,Double Lat2, Double Long2) 
+	
+	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	public static void main(String[] args) throws Exception{
 		
-		v = getData("2012-08-13_05-54-56.gpx");
+		v = getData("E://_reg//GPX//2015-06//2015-06-08T05_59_27-001Z.gpx");
 		System.out.println("total1 "+v.get(v.size()-1).total+" метров");
 		System.out.println("middle speed "+midleSpeed(v));
 		
+		int i=0;
+		
+		for (recGeo1 g : v) {
+			
+			if (i==0) {
+				
+				i++;
+				continue;
+				
+			}
+			
+			System.out.print(g.Direction);
+			System.out.print("	");
+			System.out.print(g.time);
+			System.out.println();
+			i++;
+			
+		}
+		
 	}//public static void main(String[] args) throws Exception
+	
+	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
 }//public class parserGPXsax
 
@@ -239,6 +319,13 @@ class recGeo1 {
 	long	absTime;	//*** время в непрерывном исчислении
 	Double	speed;		//*** скорость на данном участке
 	String  date;		//*** дата на точке
+	Double	Direction;	//*** направление относительно прошлой точки
+	
+	String  wpName;		//*** имя путевой точки если она распознана
+	
+	String  ds1;		//*** любая информация 1
+	String  ds2;		//*** любая информация 2
+	String  ds3;		//*** любая информация 3
 	
 }//class recGeo
 

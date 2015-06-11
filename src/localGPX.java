@@ -1,5 +1,6 @@
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -10,6 +11,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 
 
@@ -38,9 +41,11 @@ public class localGPX extends javax.swing.JFrame {
 	private JLabel lblCurF;
 	private JLabel lblCurPr;
 	
+	public static setting se = new setting(); //**загрузим настройки....
+	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	localGPX() throws ClassNotFoundException, SQLException{
+	localGPX() throws ClassNotFoundException, SQLException {
 		
 		setTitle("¬ыгрузка в GPX");
 		
@@ -52,6 +57,7 @@ public class localGPX extends javax.swing.JFrame {
 		progressBar.setStringPainted(true);
 		progressBar.setForeground(new Color(0, 206, 209));
 		progressBar.setBounds(129, 51, 402, 27);
+		
 		getContentPane().add(progressBar);
 		
 		JButton btnStart = new JButton("start");
@@ -69,27 +75,42 @@ public class localGPX extends javax.swing.JFrame {
 		
 		JButton btnStop = new JButton("stop");
 		btnStop.addActionListener(new ActionListener() {
+			
 			@SuppressWarnings("deprecation")
 			public void actionPerformed(ActionEvent e) {
+				
 				if (goTNmea.started == true){
+					
 					x2.stop();
+					
 				}	
+				
 			}
+			
 		});
+		
 		btnStop.setBounds(151, 154, 97, 25);
 		getContentPane().add(btnStop);
 		
 		JButton btnExit = new JButton("exit");
 		btnExit.addActionListener(new ActionListener() {
 			@SuppressWarnings("deprecation")
+			
 			public void actionPerformed(ActionEvent e) {
+				
 				if (goTNmea.started == true){
+					
 					x2.stop();
-				}	
+					
+				}
+				
 				System.exit(0);
+				
 			}
+			
 		});
-		btnExit.setBounds(389, 154, 142, 25);
+		
+		btnExit.setBounds(434, 154, 97, 25);
 		getContentPane().add(btnExit);
 		
 		tablo = new JLabel("∆ду...");
@@ -131,9 +152,24 @@ public class localGPX extends javax.swing.JFrame {
 		btnNewButton.setBounds(260, 154, 97, 25);
 		getContentPane().add(btnNewButton);
 		
+		JButton btnPoi = new JButton("POI");
+		btnPoi.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent e) {
+				
+				editPoints.main(null);
+				
+			}
+			
+		});
+		
+		btnPoi.setBounds(369, 154, 56, 25);
+		getContentPane().add(btnPoi);
+		
 		addWindowListener(new java.awt.event.WindowAdapter() {
 			
 			public void windowClosing(java.awt.event.WindowEvent evt) {
+				setting.saveSetting();
 				//toClose(evt);
 			}
 		
@@ -151,11 +187,13 @@ public class localGPX extends javax.swing.JFrame {
         
 		});
 		
+		
+		
 	}//localGPX() throws ClassNotFoundException, SQLException
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	public static void main(String[] args) throws ClassNotFoundException, SQLException{
+	public static void main(String[] args) throws ClassNotFoundException, SQLException, InvalidPropertiesFormatException, FileNotFoundException, IOException{
 		
 		new localGPX().setVisible(true);
 
@@ -172,6 +210,8 @@ class newDb {
 	static String TBL_LOGGER 	= "CREATE TABLE IF NOT EXISTS logger(ID INTEGER PRIMARY KEY AUTOINCREMENT,filename TEXT);";
 	static String TBL_POINTS 	= "CREATE TABLE IF NOT EXISTS points(ID INTEGER PRIMARY KEY AUTOINCREMENT,unixTime NUMERIC,tmStamp NUMERIC,lat REAL,lon REAL,speed REAL,date TEXT,time TEXT,alldate TEXT,course REAL,file TEXT,descr TEXT,deltaTime INTEGER);";
 	static String TBL_PROCESS 	= "CREATE TABLE IF NOT EXISTS process(ID INTEGER PRIMARY KEY AUTOINCREMENT,time long,descr text,start boolean,end boolean)";
+	static String TBL_POI 		= "CREATE TABLE IF NOT EXISTS poi(ID INTEGER PRIMARY KEY AUTOINCREMENT,lat REAL,lon REAL,speed NUMERIC,descr TEXT);";
+	static String TBL_LOG 		= "CREATE TABLE IF NOT EXISTS logdrive(ID INTEGER PRIMARY KEY AUTOINCREMENT,unixTime NUMERIC,time TEXT,descr TEXT);";
 	static long stOld 	= 0; //прошлый штамп времени
 	
 	newDb() throws ClassNotFoundException, SQLException{
@@ -208,6 +248,8 @@ class newDb {
 		st.execute(TBL_LOGGER);
 		st.execute(TBL_POINTS);
 		st.execute(TBL_PROCESS);
+		st.execute(TBL_POI);
+		st.execute(TBL_LOG);
 		
 		st.close();
 		
@@ -239,6 +281,7 @@ class newDb {
 		File[] fList 	= directory.listFiles();
 		int stPos = fList.length;
 		int i = 0;
+		
 		for (File file : fList){
 			
 			if (file.getName().indexOf(".nmea") >0 ) {
@@ -251,12 +294,15 @@ class newDb {
 					localGPX.progressBar.setValue(tp);
 					
 				}
+				
 				catch (NullPointerException e){
 					
 				}
 					
 			}//if
+			
 			i++;
+			
 		}//for
 		
 		//!lbl.setText("end...");
@@ -270,12 +316,15 @@ class newDb {
 	public static void parseNMEA(String adr,String fileName) throws Exception {
 		
 		String[] s 	= function.loadData(adr);
+		
 		long 	stT	= 0; //***текущий штамп времени
+		
 		Class.forName("org.sqlite.JDBC");
 		Connection bd = DriverManager.getConnection("jdbc:sqlite:"+DB_NAME+".db");
 		Statement st  = bd.createStatement();
 		st.setQueryTimeout(60);
 		int stPos = s.length;
+		
 		for (int i = 0 ;i<s.length;i++) {
 			
 			if (s[i].indexOf("GPRMC")>0) {
@@ -298,9 +347,12 @@ class newDb {
 				stOld = stT;
 				
 				try {
+					
 					int tp = Math.round(i*100/stPos==0?1:i);
 					localGPX.opProgressBar.setValue(tp);
+					
 				}
+				
 				catch (NullPointerException e){
 					
 				}
@@ -344,14 +396,17 @@ class newDb {
 	//	обработка трака в базе данных.
 	public static void solveGpxTrack(String dr) throws ClassNotFoundException, SQLException {
 		
-		int i=0;
+		int i				=0;
 		long firstPoint 	= 0;
 		long secondPoint 	= 0;
 		String dateMark 	= "";
-		List<listID> v = new ArrayList<listID>();
+		List<listID> v 		= new ArrayList<listID>();
 				
-		
-		ResultSet x = getResult("SELECT * FROM points WHERE lat<9999 ORDER BY tmStamp;");
+		Class.forName("org.sqlite.JDBC");
+		Connection bd 			= DriverManager.getConnection("jdbc:sqlite:"+DB_NAME+".db");
+		Statement st 			= bd.createStatement();
+		st.setQueryTimeout(60);
+		ResultSet x = st.executeQuery("SELECT * FROM points WHERE lat<9999 ORDER BY tmStamp;");
 		
 		while (x.next()) {
 			
@@ -388,20 +443,31 @@ class newDb {
 		v1.end 		= firstPoint-1;
 		v.add(v1);
 		
-		for (int i1=0;i1<v.size();i1++){
+		//**выбор путевых точек из базы данных
+		//**дл€ дальнейшего сохранени€
+		
+		ResultSet  rWp = st.executeQuery("SELECT * FROM poi;");
+		List<poiID> v8 		= new ArrayList<poiID>();
+		
+		while (rWp.next()) {
 			
-			ResultSet y = getResult("SELECT * FROM points WHERE (tmStamp>="
-											+String.valueOf(v.get(i1).start)
-											+") and (tmStamp<="
-											+String.valueOf(v.get(i1).end)
-											+") ORDER BY tmStamp;");
+			poiID v7 = new poiID();
 			
-			saveGPX(y , v.get(i1).id,dr);
+			v7.lat 		=rWp.getString("lat");
+			v7.lon 		=rWp.getString("lon");
+			v7.descr    =rWp.getString("descr");
+			v8.add(v7);
+		}	
+		
+		
+		for (int i1 = 0 ; i1 < v.size() ; i1++ ){
 			
-			Class.forName("org.sqlite.JDBC");
-			Connection bd = DriverManager.getConnection("jdbc:sqlite:"+DB_NAME+".db");
-			Statement st  = bd.createStatement();
-			st.setQueryTimeout(60);
+			//**выбор точек дл€ построени€ трака
+			ResultSet rTr = st.executeQuery("SELECT * FROM points WHERE (tmStamp>="
+											+String.valueOf(v.get(i1).start) + ") and (tmStamp<="
+											+String.valueOf(v.get(i1).end) + ") ORDER BY tmStamp;");
+			
+			saveGPX(rTr , v8 , v.get(i1).id , dr);
 			
 			st.execute("UPDATE points SET descr='" + v.get(i1).id + "' WHERE (tmStamp>="
 											+String.valueOf(v.get(i1).start)
@@ -412,61 +478,82 @@ class newDb {
 			
 		}//for
 		
+		saveWp(v8 , dr); //**сохраним путевые точки
 		
 	}//public static void solveGpxTrack() throws ClassNotFoundException, SQLException
 	
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	public static void saveGPX(ResultSet rx , String id,String dr) throws ClassNotFoundException, SQLException {
+	public static void saveGPX(ResultSet rx ,List<poiID> ry , String id , String dr) throws ClassNotFoundException, SQLException {
+		
 		//**пишем GPX файл из базы данных
 		//**@id номер трака в базе
 		//**@dr адрес куда пишем
-		String adrFile = dr+"\\"+id+".gpx";
-		/*
-		File theDir = new File(adrFile);
+		//**@ry набор записей путевых точек (poi)
 		
-		if (theDir.exists()) {
-			//**файл есть , не пишем.
-			return;
-		}
-		*/
+		String adrFile = dr+"\\"+id+".gpx";
+		
 		Writer writer = null;
 		
 		try {
+			
 			writer =new BufferedWriter(new OutputStreamWriter(
 					new FileOutputStream(adrFile), "utf-8"));
 			String s = 
-					"<?xml version='1.0' encoding='UTF-8'?>"		
-					+"<gpx xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' version='1.0'>";
-	    
+					"<?xml version='1.0' encoding='UTF-8'?> \n"		
+					+"<gpx xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' version='1.0'> \n";
 			writer.write(s, 0 , s.length());
-			s ="<trk>";
+			/*
+			for (poiID y : ry) {
+				
+				s ="<wpt lat='"+String.valueOf((y.lat))
+						+"' lon='"+String.valueOf((y.lon))+"'>";
+				writer.write(s, 0 , s.length());
+				
+				s ="<name>"+y.descr+"</name>";
+				writer.write(s, 0 , s.length());
+			
+				s ="</wpt> \n";
+				writer.write(s, 0 , s.length());
+				
+			}
+			
+			*/
+			
+			s ="<trk> \n";
 			writer.write(s, 0 , s.length());
-			s = "   <name>"+id+"</name>";
+			s = "   <name>"+id+"</name> \n";
 			writer.write(s, 0 , s.length());
-			s ="       <trkseg>";
+			s ="       <trkseg> \n";
 			writer.write(s, 0 , s.length());
+			
 			int i = 0;
+			
 			while (rx.next()) {
-				if (rx.getString("lat").equals("99999.0") != true & i>0) {
+				
+				if (rx.getString("lat").equals("99999.0") != true & i > 0) {
+					
 					s ="         <trkpt lat='"+String.valueOf(cc(rx.getString("lat")))
 								+"' lon='"+String.valueOf(cc(rx.getString("lon")))+"'>";
 					writer.write(s, 0 , s.length());
-					s ="         <time>"+rx.getString("alldate")+"</time>";
+					s ="         <time>"+rx.getString("alldate")+"</time> \n";
 					writer.write(s, 0 , s.length());
-					s ="         <speed>"+rx.getString("speed")+"</speed>";
+					s ="         <speed>"+rx.getString("speed")+"</speed> \n";
 					writer.write(s, 0 , s.length());
-					s ="         <ele>0.0</ele>";
+					s ="         <ele>0.0</ele> \n";
 					writer.write(s, 0 , s.length());
-					s ="        </trkpt>";
+					s ="        </trkpt> \n";
 					writer.write(s, 0 , s.length());
 					
 				}
+				
 				i++;
+				
 			}
-			s ="       </trkseg>";
+			
+			s ="       </trkseg> \n";
 			writer.write(s, 0 , s.length());
-			s ="</trk>";
+			s ="</trk> \n";
 			writer.write(s, 0 , s.length());
 			s ="</gpx>";
 			writer.write(s, 0 , s.length());
@@ -487,7 +574,69 @@ class newDb {
 			catch (Exception ex) {}
 			
 		}
+		
     } //saveUrl(String filename, String urlString)
+	
+	///////////////////////////////////////////////////////////////////////////////////
+	/*
+	 * просто сохранит путевые точки в файл именем которого будет сегодн€шн€€ дата
+	 */
+	static public void saveWp(List<poiID> ry , String dr){
+		
+		Calendar currentTime = Calendar.getInstance();
+		String id = "wpt_"+	String.valueOf(currentTime.get(1))+"-"
+								+ (currentTime.get(2) + 1 >= 10 ? String.valueOf(currentTime.get(2) + 1) : "0"+String.valueOf(currentTime.get(2) + 1)) +"-"
+								+(currentTime.get(5) >=10 ? String.valueOf(currentTime.get(5))  : "0"+String.valueOf(currentTime.get(5)));
+		
+		String adrFile = dr+"\\"+id+".gpx";
+		
+		Writer writer = null;
+		
+		try {
+			
+			writer =new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(adrFile), "utf-8"));
+			String s = 
+					"<?xml version='1.0' encoding='UTF-8'?> \n"		
+					+"<gpx xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' version='1.0'> \n";
+			writer.write(s, 0 , s.length());
+			
+			for (poiID y : ry) {
+				
+				s ="<wpt lat='"+String.valueOf((y.lat))
+						+"' lon='"+String.valueOf((y.lon))+"'>";
+				writer.write(s, 0 , s.length());
+				
+				s ="<name>"+y.descr+"</name>";
+				writer.write(s, 0 , s.length());
+			
+				s ="</wpt> \n";
+				writer.write(s, 0 , s.length());
+				
+			}
+			
+			s ="</gpx>";
+			writer.write(s, 0 , s.length());
+			
+		} 
+		
+		catch (IOException ex) {
+
+		} 
+		
+		finally {
+			
+			try {
+				
+				writer.close();
+				
+			} 
+			
+			catch (Exception ex) {}
+			
+		}
+		
+	}//static public void saveWp(List<poiID> ry , String dr)
 	
 	///////////////////////////////////////////////////////////////////////////////////
 	
@@ -503,6 +652,7 @@ class newDb {
 			
 			String p0 = String.valueOf(Double.valueOf(s)*0.01);
 			String p1 = p0.split("\\.")[1];
+			
 			return Double.valueOf(p0.split("\\.")[0]) 
 					+(Double.valueOf(p1.substring(0,2)
 							+"."+p1.substring(2,p1.length()))/60);
@@ -535,7 +685,9 @@ class goTNmea extends Thread {
 			beginProcessing();
 
 		} catch (Exception e) {
+			
 			e.printStackTrace();
+		
 		}
 
 	} //public void run()
@@ -544,8 +696,8 @@ class goTNmea extends Thread {
 
 	public static void beginProcessing() throws Exception {
 		
-		String in = function.getDir("”кажите им€ папки в которой лежат файлы NMEA:");
-		String out = function.getDir("”кажите им€ папки дл€ выгрузки:"); 
+		String in 	= function.getDir("”кажите им€ папки в которой лежат файлы NMEA:",setting.loadPath);
+		String out 	= function.getDir("”кажите им€ папки дл€ выгрузки:",setting.savePath); 
 		
 		localGPX.tablo.setText("читаю файлы");
 		newDb.beginData(in);
@@ -559,6 +711,8 @@ class goTNmea extends Thread {
 
 }//class goNmea extends Thread
 
+	/////////////////////////////////////////////////////////////////////////////////////
+
 class listID {
 	
 	long start;
@@ -566,4 +720,14 @@ class listID {
 	String id;
 	
 }//class recGeo
+
+	/////////////////////////////////////////////////////////////////////////////////////
+
+class poiID {
+	
+	String lat;
+	String lon;
+	String descr;
+	
+}//class poiID
 

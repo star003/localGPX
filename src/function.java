@@ -1,10 +1,14 @@
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.swing.JFileChooser;
+import javax.swing.JTable;
 
 public class function {
 	
@@ -52,14 +57,16 @@ public class function {
 	
 	///////////////////////////////////////////////////////////////////////////////////
 	
-	public static String getDir(String ops){
+	public static String getDir(String ops,String defLoc){
 		/*
 		 * диалог выбора директории 
 		 * @ops - заголовок окна выбора
+		 * @String defLoc - путь по умолчанию
 		 * вернет путь к выбранной директории
 		 */
 		JFileChooser chooser = new JFileChooser();
-        chooser.setCurrentDirectory(new java.io.File("."));
+        //chooser.setCurrentDirectory(new java.io.File("."));
+		chooser.setCurrentDirectory(new java.io.File(defLoc));
         chooser.setDialogTitle(ops);
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         
@@ -78,14 +85,14 @@ public class function {
 
 	///////////////////////////////////////////////////////////////////////////////////
 	
-	static public ResultSet getResult(String sql) throws ClassNotFoundException{
+	static public ResultSet getResult(String sql,String pathDB) throws ClassNotFoundException{
 		/*
 		 * универсальная функция , возвращает результат запроса @sql
 		 */
 		try {
 			
 			Class.forName("org.sqlite.JDBC");
-			Connection bd 			= DriverManager.getConnection("jdbc:sqlite:param.db");
+			Connection bd 			= DriverManager.getConnection("jdbc:sqlite:"+pathDB);
 			ResultSet resultSet 	= null; 
 			Statement st 			= bd.createStatement();
 			st.setQueryTimeout(60);
@@ -113,11 +120,11 @@ public class function {
 	
 	///////////////////////////////////////////////////////////////////////////////////
 	
-	static public boolean findData(String id) throws SQLException, ClassNotFoundException  {
+	static public boolean findData(String id,String pathDB) throws SQLException, ClassNotFoundException  {
 		/*
 		 * поищем в базе префикс @id если найдем то вернем истину
 		 */
-		ResultSet r =  function.getResult("SELECT * FROM logger WHERE filename = '"+id+"';");
+		ResultSet r =  function.getResult("SELECT * FROM logger WHERE filename = '"+id+"';",pathDB);
 		int 	i		= 0;
 		
 		while (r.next()) {
@@ -239,12 +246,12 @@ public class function {
 	
 	///////////////////////////////////////////////////////////////////////////////////
 	
-	static public boolean existRecordForFile(String fileName) throws ClassNotFoundException, SQLException {
+	static public boolean existRecordForFile(String fileName,String pathDB) throws ClassNotFoundException, SQLException {
 		/*
 		 * проверит наличие данных в БД для загружаемого файла @fileName
 		 */
 		Class.forName("org.sqlite.JDBC");
-		Connection bd 			= DriverManager.getConnection("jdbc:sqlite:param.db");
+		Connection bd 			= DriverManager.getConnection("jdbc:sqlite:"+pathDB);
 		ResultSet resultSet 	= null; 
 		Statement st 			= bd.createStatement();
 		st.setQueryTimeout(60);
@@ -366,19 +373,19 @@ public class function {
 	
 	///////////////////////////////////////////////////////////////////////////////////
 	
-	public static void main(String args[]) throws IOException, NoSuchAlgorithmException {
-		
+	public static void main(String args[]) throws ClassNotFoundException, SQLException {
+		wptType("e://000.gpx");
 	}//public static void main(String args[]) throws IOException
 	
 	 ///////////////////////////////////////////////////////////////////////////////////
 	 
-	 static public void executeQ(String sql) throws SQLException, ClassNotFoundException {
+	 static public void executeQ(String sql,String pathDB) throws SQLException, ClassNotFoundException {
 		 
 			/*
 			 * выполним sql инструкцию (без извлечения результата)
 			 */
 			Class.forName("org.sqlite.JDBC");
-			Connection bd = DriverManager.getConnection("jdbc:sqlite:param.db");
+			Connection bd = DriverManager.getConnection("jdbc:sqlite:"+pathDB);
 			Statement st  = bd.createStatement();
 			st.setQueryTimeout(60);
 			st.execute(sql);
@@ -388,10 +395,10 @@ public class function {
 		
 	////////////////////////////////////////////////////////////////////////////////////////
 		
-	static public void addCommentInBD(String comment,long SessionID) throws ClassNotFoundException, SQLException {
+	static public void addCommentInBD(String comment,long SessionID,String pathDB) throws ClassNotFoundException, SQLException {
 		
 		String sql = "INSERT INTO process (time,descr,session) VALUES("+String.valueOf(new Date().getTime())+",'"+comment+"',"+String.valueOf(SessionID)+");";
-		executeQ(sql);
+		executeQ(sql,pathDB);
 		
 	} //static public void addCommentInBD(String comment,boolean start, boolean end) {
 	
@@ -424,6 +431,112 @@ public class function {
 		return sb.toString();
 		
 	}	//static public String crc(String f) throws IOException, NoSuchAlgorithmException
+	
+	////////////////////////////////////////////////////////////////////////////////////////
+	
+	static void tableOperation(JTable table,String sql,String pathDB) {
+		/*  
+		 * Выполняет запрос @sql и перерисовывает таблицу формы
+		 */
+		try {
+			if (sql != "")  getResult1(sql,pathDB);
+			table.setModel(editPoints.buildTableModel(getResult("SELECT * FROM poi;",pathDB),false));
+			table.revalidate();
+			table.repaint();
+		} catch (ClassNotFoundException | SQLException e1) {
+			try {
+				table.setModel(editPoints.buildTableModel(getResult("SELECT * FROM poi;",pathDB),false));
+			} catch (ClassNotFoundException | SQLException e2) {
+				e2.printStackTrace();
+			}
+			table.revalidate();
+			table.repaint();
+		}
+	}//static void tableOperation(JTable table,String sql)
+	
+	////////////////////////////////////////////////////////////////////////////////////////
+	
+	static void getResult1(String sql,String pathDB) throws ClassNotFoundException, SQLException {
+		/*
+		 * выполнит запрос @sql
+		 * базы данных pathDB
+		 */
+		Class.forName("org.sqlite.JDBC");
+		Connection bd 			= DriverManager.getConnection("jdbc:sqlite:"+pathDB);
+		Statement st 			= bd.createStatement();
+		st.setQueryTimeout(60);
+		ResultSet resultSet  	= st.executeQuery( sql );
+		resultSet.close();
+		
+	} //static getResult1(String sql) throws ClassNotFoundException, SQLException
+	
+	
+	static Double cc1(String s) {
+		
+		String p1 = s.split("\\.")[1];
+		
+		return Double.valueOf(
+				s.split("\\.")[0]) 
+					+(Double.valueOf( p1.substring(0,2)
+							+"."+p1.substring(2,p1.length())));
+	}
+	////////////////////////////////////////////////////////////////////////////////////////
+	/*
+	 * выгрузит путевые точки в отдельный файл
+	 * @filName полный путь к файлу с именем например e://example.gpx
+	 */
+	static public void wptType(String filName) throws SQLException, ClassNotFoundException{
+		String pathDB 			= "tParam.db"; 
+		String adrFile 			= filName;
+		Writer writer 			= null;
+		
+		try {
+			
+			Class.forName("org.sqlite.JDBC");
+			Connection bd = DriverManager.getConnection("jdbc:sqlite:"+pathDB);
+			Statement st  = bd.createStatement();
+			st.setQueryTimeout(60);
+			ResultSet  rx = st.executeQuery("SELECT * FROM poi;");
+			
+			writer =new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(adrFile), "utf-8"));
+			String s = 
+					"<?xml version='1.0' encoding='UTF-8'?>"		
+					+"<gpx xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' version='1.0'> \n";
+	    
+			writer.write(s, 0 , s.length());
+			
+			while (rx.next()) {
+				s ="<wpt lat='"+String.valueOf((rx.getString("lat")))
+					+"' lon='"+String.valueOf((rx.getString("lon")))+"'>";
+			
+				writer.write(s, 0 , s.length());
+			
+				s ="<name>"+rx.getString("descr")+"</name>";
+				writer.write(s, 0 , s.length());
+			
+				s ="</wpt> \n";
+				writer.write(s, 0 , s.length());
+			}
+			s ="</gpx>";
+			writer.write(s, 0 , s.length());
+		} 
+		
+		catch (IOException ex) {
+
+		} 
+		
+		finally {
+			
+			try {
+				
+				writer.close();
+				
+			} 
+			catch (Exception ex) {}
+			
+		}
+	}
 	
 }//public class function
 

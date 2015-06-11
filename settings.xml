@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>настройки программы</comment>
+<entry key="loadPath">G://DCIM//100MEDIA//</entry>
+<entry key="savePath">E://_reg//GPX//</entry>
+<entry key="lastOpenedFile"/>
+</properties>
