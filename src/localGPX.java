@@ -49,7 +49,7 @@ public class localGPX extends javax.swing.JFrame {
 		
 		setTitle("Выгрузка в GPX");
 		
-		setBounds(100, 100, 590, 237); 	
+		setBounds(100, 100, 590, 275); 	
 		setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 		getContentPane().setLayout(null);
 		
@@ -149,7 +149,7 @@ public class localGPX extends javax.swing.JFrame {
 			
 		});
 		
-		btnNewButton.setBounds(260, 154, 97, 25);
+		btnNewButton.setBounds(325, 154, 97, 25);
 		getContentPane().add(btnNewButton);
 		
 		JButton btnPoi = new JButton("POI");
@@ -163,8 +163,22 @@ public class localGPX extends javax.swing.JFrame {
 			
 		});
 		
-		btnPoi.setBounds(369, 154, 56, 25);
+		btnPoi.setBounds(325, 192, 97, 25);
 		getContentPane().add(btnPoi);
+		
+		JButton btnSet = new JButton("setting");
+		btnSet.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent arg0) {
+				
+				formSetting.main(null);
+				
+			}
+			
+		});
+		
+		btnSet.setBounds(434, 192, 97, 25);
+		getContentPane().add(btnSet);
 		
 		addWindowListener(new java.awt.event.WindowAdapter() {
 			
@@ -420,7 +434,7 @@ class newDb {
 			
 			i++;
 			
-			if (Long.valueOf(x.getString("tmStamp")) - secondPoint >10000000){
+			if (Long.valueOf(x.getString("tmStamp")) - secondPoint > setting.parking_slot){
 				
 				listID v1 	= new listID();
 				v1.id 		= function.deleteNouse(dateMark); 
@@ -696,8 +710,8 @@ class goTNmea extends Thread {
 
 	public static void beginProcessing() throws Exception {
 		
-		String in 	= function.getDir("Укажите имя папки в которой лежат файлы NMEA:",setting.loadPath);
-		String out 	= function.getDir("Укажите имя папки для выгрузки:",setting.savePath); 
+		String in 	= function.getDir("Укажите имя папки в которой лежат файлы NMEA:",setting.load_Path);
+		String out 	= function.getDir("Укажите имя папки для выгрузки:",setting.save_Path); 
 		
 		localGPX.tablo.setText("читаю файлы");
 		newDb.beginData(in);

@@ -35,8 +35,7 @@ public class analizGPX  extends javax.swing.JFrame {
 	
 	static public JProgressBar progressBar = new JProgressBar();
 	
-	static public Double xLat = 0.0001; //**11 метров
-	static public Double xLon = 0.0002; //**12 метров
+	
 	
 	//////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -150,7 +149,7 @@ public class analizGPX  extends javax.swing.JFrame {
 		String r = "";
 		
 		JFileChooser chooser = new JFileChooser();
-        chooser.setCurrentDirectory(new java.io.File(setting.savePath == null ? ".":setting.savePath));
+        chooser.setCurrentDirectory(new java.io.File(setting.save_Path == null ? ".":setting.save_Path));
         chooser.setDialogTitle("");
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         
@@ -265,9 +264,9 @@ public class analizGPX  extends javax.swing.JFrame {
 		
 		for (recGeo1 y : x) {
 			
-			String strQ = "SELECT * FROM poi WHERE (lat >="+String.valueOf(y.lat - xLat)
-					+" and lat <="+String.valueOf(y.lat + xLat)+") and (lon >="
-					+String.valueOf(y.lon - xLon)+" and lon <="+String.valueOf(y.lon + xLon)+") LIMIT 1;";
+			String strQ = "SELECT * FROM poi WHERE (lat >="+String.valueOf(y.lat - setting.x_Lat)
+					+" and lat <="+String.valueOf(y.lat + setting.x_Lat)+") and (lon >="
+					+String.valueOf(y.lon - setting.x_Lon)+" and lon <="+String.valueOf(y.lon + setting.x_Lon)+") LIMIT 1;";
 			
 			ResultSet  r = st.executeQuery(strQ);
 			
@@ -329,14 +328,6 @@ public class analizGPX  extends javax.swing.JFrame {
 	 */
 	static void waitAnaliz(List<recGeo1> x) throws Exception{
 		
-		int controlDistance = 50; //**дистанция в метрах
-		int controlTime = 20; //**за время в сек
-		
-		Double _xLat =0.001; 
-		Double _xLon =0.002;
-		
-		int limitToTimeWait = 200; //**до этой цифры в секундах считаем остановкой, больше стоянка
-		
 		/*
 		String r = "";
 		
@@ -353,6 +344,7 @@ public class analizGPX  extends javax.swing.JFrame {
         txTablo.setText(null);
         List<recGeo1> x =  parserGPXsax.getData(r);
         */
+		
         Class.forName("org.sqlite.JDBC");
 		Connection bd = DriverManager.getConnection("jdbc:sqlite:"+pathDB);
 		Statement st  = bd.createStatement();
@@ -378,18 +370,18 @@ public class analizGPX  extends javax.swing.JFrame {
 			stac.add(y);
 			summDist += y.distance;
 			
-			if (summDist>controlDistance){
+			if (summDist > setting.control_Distance) {
 				
-				if(stac.size()>controlTime) {
+				if(stac.size()>setting.control_Time) {
 					/*
 					 * запишем результат в массив. Это остановка
 					 */
 					double tim = (stac.get(stac.size()-1).absTime - stac.get(0).absTime)/1000;
-					if (tim<=limitToTimeWait & tim >0) {
+					if (tim <= setting.limit_To_Time_Wait & tim >0) {
 						stac.get(0).ds1 			= "ожидание "+String.valueOf( 
 							(stac.get(stac.size()-1).absTime - stac.get(0).absTime)/1000)+" c.";
 					
-						totalWait +=  tim<= limitToTimeWait & tim >0 ? tim :0;
+						totalWait +=  tim<= setting.limit_To_Time_Wait & tim >0 ? tim :0;
 					
 						boolean killFor = false;
 					
@@ -399,9 +391,9 @@ public class analizGPX  extends javax.swing.JFrame {
 					
 						for (recGeo1 recGeo1 : stac) {
 						
-							String strQ = "SELECT * FROM poi WHERE (lat >=" + String.valueOf(recGeo1.lat - _xLat)
-								+" and lat <=" + String.valueOf(recGeo1.lat + _xLat)+") and (lon >="
-								+ String.valueOf(recGeo1.lon - _xLon) + " and lon <=" + String.valueOf(recGeo1.lon + _xLon) + ") LIMIT 1;";
+							String strQ = "SELECT * FROM poi WHERE (lat >=" + String.valueOf(recGeo1.lat - setting.wait_Lat)
+								+" and lat <=" + String.valueOf(recGeo1.lat + setting.wait_Lat)+") and (lon >="
+								+ String.valueOf(recGeo1.lon - setting.wait_Lon) + " and lon <=" + String.valueOf(recGeo1.lon + setting.wait_Lon) + ") LIMIT 1;";
 							
 							ResultSet  r1 = st.executeQuery(strQ);
 						
